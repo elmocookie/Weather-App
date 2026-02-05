@@ -26,6 +26,9 @@ ENV/
 ._*
 Thumbs.db
 
+# Claude Code
+.claude/
+
 # Distribution / packaging
 dist/
 build/

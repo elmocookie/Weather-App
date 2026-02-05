@@ -65,19 +65,19 @@ def get_weather_condition(precip_prob, wind_speed):
 
     # Determine condition based on precipitation and wind
     if precip_prob > 70:
-        return "🌧️", "Rainy"
+        return "🌧️💙", "Rainy"
     elif precip_prob > 40:
-        return "☁️", "Cloudy"
+        return "☁️💤", "Cloudy"
     elif precip_prob > 20:
         if wind_speed > 20:
-            return "⛅", "Partly Cloudy & Windy"
+            return "🌤️🌸", "Partly Cloudy & Windy"
         else:
-            return "⛅", "Partly Cloudy"
+            return "⛅💭", "Partly Cloudy"
     else:
         if wind_speed > 25:
-            return "🌤️", "Sunny & Windy"
+            return "🌤️💫", "Sunny & Windy"
         else:
-            return "☀️", "Sunny"
+            return "☀️✨", "Sunny"
 
 
 def get_location_from_ip():
