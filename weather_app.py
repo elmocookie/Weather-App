@@ -1,12 +1,14 @@
 import streamlit as st
 import requests
 from datetime import datetime
+import random
 
 # Page configuration
-st.set_page_config(page_title="Weather Predictor", page_icon="🌤️")
+st.set_page_config(page_title="Let's Check the Weather!", page_icon="🌤️")
 
-st.title("🌤️ Weather Predictor")
-st.write("Get current weather and 24-hour forecast with trend prediction")
+st.title("🌈✨ Let's Check the Weather! ✨🌈")
+st.write("Discover today's weather vibes and plan your perfect day! 🌤️")
+st.write("---")
 
 # --- Helper Functions ---
 
@@ -48,14 +50,15 @@ def geocode_city(city_name):
         return None
 
 
-def get_weather_condition(precip_prob, wind_speed):
+def get_weather_condition(precip_prob, wind_speed, temperature=None):
     """
-    Determine weather condition based on precipitation probability and wind speed.
-    Returns (icon, condition_name) tuple.
+    Determine weather condition based on precipitation probability, wind speed, and temperature.
+    Returns (icon, condition_name, description, tip) tuple.
 
     Args:
         precip_prob: Precipitation probability (0-100) or None
         wind_speed: Wind speed in km/h or None
+        temperature: Temperature in Celsius or None
     """
     # Default values if data is missing
     if precip_prob is None:
@@ -63,21 +66,180 @@ def get_weather_condition(precip_prob, wind_speed):
     if wind_speed is None:
         wind_speed = 0
 
+    # Determine temperature category
+    temp_cold = temperature is not None and temperature < 10
+    temp_cool = temperature is not None and 10 <= temperature < 20
+    temp_warm = temperature is not None and 20 <= temperature < 30
+    temp_hot = temperature is not None and temperature >= 30
+
     # Determine condition based on precipitation and wind
     if precip_prob > 70:
-        return "🌧️💙", "Rainy"
+        if temp_cold:
+            tip = "☔ Bundle up! It's cold and rainy - perfect for cozy indoor activities with hot drinks! ☕❄️"
+        else:
+            tip = "☔ Grab your cutest umbrella and rain boots! Puddle jumping optional but recommended! 💧"
+        return ("🌧️💙", "Rainy",
+                "Perfect day for cozy indoor vibes! 🏠💕", tip)
+
     elif precip_prob > 40:
-        return "☁️💤", "Cloudy"
+        if temp_cold:
+            tip = "🧣 Chilly and cloudy! Perfect for hot chocolate and warm blankets! Stay cozy! ☕🛋️"
+        else:
+            tip = "📚 Perfect for reading, napping, or enjoying hot chocolate! Blanket forts highly encouraged! 🛋️"
+        return ("☁️💤", "Cloudy",
+                "Dreamy cloud-watching weather! ☁️✨", tip)
+
     elif precip_prob > 20:
         if wind_speed > 20:
-            return "🌤️🌸", "Partly Cloudy & Windy"
+            if temp_cold:
+                tip = "🧥 Breezy and chilly! Layer up for outdoor adventures - the fresh air is invigorating! 🌬️❄️"
+            else:
+                tip = "🎐 Perfect for flying kites or feeling the wind in your hair! Hold onto your hat! 🎩"
+            return ("🌤️🌸", "Partly Cloudy & Windy",
+                    "Nature's gentle breeze is here! 🌸💨", tip)
         else:
-            return "⛅💭", "Partly Cloudy"
-    else:
+            if temp_cold:
+                tip = "📸 Great lighting for photos! Dress warm and enjoy the crisp air! 🧣✨"
+            else:
+                tip = "📸 Great for photos! The lighting is *chef's kiss* perfect! ✨"
+            return ("⛅💭", "Partly Cloudy",
+                    "Soft clouds making art in the sky! 🎨", tip)
+
+    else:  # Sunny conditions
         if wind_speed > 25:
-            return "🌤️💫", "Sunny & Windy"
+            if temp_cold:
+                tip = "🌞 Sunny but cold! Bundle up for winter walks - the sunshine makes it feel warmer! ❄️☀️"
+            elif temp_hot:
+                tip = "🌞 Hot and breezy! Stay hydrated and seek shade when needed! 💦🌴"
+            else:
+                tip = "🌞 Sun's out, fun's out! Don't forget sunscreen - SPF is your BFF! 🧴"
+            return ("🌤️💫", "Sunny & Windy",
+                    "Sparkly sunshine with a fun breeze! ✨💨", tip)
         else:
-            return "☀️✨", "Sunny"
+            if temp_cold:
+                tip = "☀️ Sunny but chilly! Perfect for winter walks with warm layers and hot cocoa after! ☕❄️"
+            elif temp_hot:
+                tip = "☀️ It's sizzling! Stay cool, hydrate often, and enjoy ice cream in the shade! 🍦💦"
+            elif temp_warm:
+                tip = "☀️ Perfect weather! Ideal for outdoor fun - parks, picnics, or just vibing in the sunshine! 🧺"
+            else:
+                tip = "☀️ Beautiful day for outdoor activities! Enjoy the sunshine! 🌟"
+            return ("☀️✨", "Sunny",
+                    "Perfect day for adventures! 🌟", tip)
+
+
+def get_weather_joke():
+    """Returns a random weather-related joke or pun."""
+    jokes = [
+        "What's a tornado's favorite game? Twister! 🌪️",
+        "Why did the sun go to school? To get brighter! ☀️📚",
+        "What do you call dangerous precipitation? A rain of terror! 😱💧",
+        "How do hurricanes see? With one eye! 👁️🌀",
+        "What's a cloud's favorite type of music? Heavy metal... rain! 🎸☁️",
+        "Why don't meteorologists ever win at poker? They always give away their tells about the weather! 🃏",
+        "What did the thermometer say to the graduated cylinder? You may have graduated, but I have more degrees! 🌡️",
+    ]
+    return random.choice(jokes)
+
+
+def get_mood_emoji(condition_name):
+    """Returns mood emoji based on weather condition."""
+    moods = {
+        "Sunny": "😎 Feeling energized!",
+        "Sunny & Windy": "🤗 Feeling playful!",
+        "Partly Cloudy": "😌 Feeling peaceful!",
+        "Partly Cloudy & Windy": "🥰 Feeling alive!",
+        "Cloudy": "😴 Feeling cozy!",
+        "Rainy": "🥺 Feeling contemplative!",
+    }
+    return moods.get(condition_name, "😊 Feeling good!")
+
+
+def get_weather_twin_city(temperature, condition_name):
+    """
+    Find a city with similar weather conditions.
+    Returns a fun fact about a weather twin city.
+    """
+    # Determine temperature category
+    if temperature is None:
+        temp_category = "moderate"
+    elif temperature < 5:
+        temp_category = "freezing"
+    elif temperature < 15:
+        temp_category = "cold"
+    elif temperature < 25:
+        temp_category = "moderate"
+    else:
+        temp_category = "hot"
+
+    # Simplify condition name
+    if "Rainy" in condition_name:
+        condition_type = "rainy"
+    elif "Cloudy" in condition_name:
+        condition_type = "cloudy"
+    else:
+        condition_type = "sunny"
+
+    # Database of cities with typical weather patterns
+    weather_twins = {
+        ("freezing", "sunny"): [
+            ("Reykjavik, Iceland", "Known for its geothermal pools and northern lights! 🇮🇸"),
+            ("Yellowknife, Canada", "One of the best places to see the aurora borealis! 🇨🇦"),
+        ],
+        ("freezing", "cloudy"): [
+            ("Moscow, Russia", "Home to the colorful St. Basil's Cathedral! 🇷🇺"),
+            ("Helsinki, Finland", "The happiest country with cozy cafes everywhere! 🇫🇮"),
+        ],
+        ("freezing", "rainy"): [
+            ("Bergen, Norway", "The gateway to Norway's famous fjords! 🇳🇴"),
+            ("Anchorage, Alaska", "Where you can spot whales and glaciers! 🇺🇸"),
+        ],
+        ("cold", "sunny"): [
+            ("Prague, Czech Republic", "Famous for its fairy-tale architecture! 🇨🇿"),
+            ("Seoul, South Korea", "Amazing street food and K-pop culture! 🇰🇷"),
+        ],
+        ("cold", "cloudy"): [
+            ("London, England", "Home to double-decker buses and afternoon tea! 🇬🇧"),
+            ("Dublin, Ireland", "Friendly pubs and beautiful green landscapes! 🇮🇪"),
+        ],
+        ("cold", "rainy"): [
+            ("Seattle, USA", "Coffee capital and home of grunge music! 🇺🇸☕"),
+            ("Vancouver, Canada", "Surrounded by mountains and ocean! 🇨🇦"),
+        ],
+        ("moderate", "sunny"): [
+            ("Barcelona, Spain", "Famous for Gaudí's architecture and beaches! 🇪🇸"),
+            ("San Francisco, USA", "Home to the Golden Gate Bridge! 🇺🇸"),
+        ],
+        ("moderate", "cloudy"): [
+            ("Paris, France", "The city of love, art, and croissants! 🇫🇷"),
+            ("Amsterdam, Netherlands", "Known for bikes, canals, and tulips! 🇳🇱"),
+        ],
+        ("moderate", "rainy"): [
+            ("Portland, Oregon", "Known for its quirky culture and food trucks! 🇺🇸"),
+            ("Wellington, New Zealand", "The coolest little capital in the world! 🇳🇿"),
+        ],
+        ("hot", "sunny"): [
+            ("Dubai, UAE", "Home to the world's tallest building! 🇦🇪"),
+            ("Los Angeles, USA", "Hollywood, beaches, and sunshine! 🇺🇸🌴"),
+        ],
+        ("hot", "cloudy"): [
+            ("Singapore", "A garden city with amazing food! 🇸🇬"),
+            ("Miami, USA", "Beautiful beaches and vibrant nightlife! 🇺🇸"),
+        ],
+        ("hot", "rainy"): [
+            ("Bangkok, Thailand", "Street food paradise and golden temples! 🇹🇭"),
+            ("Mumbai, India", "Bollywood central and incredible culture! 🇮🇳"),
+        ],
+    }
+
+    # Get matching cities
+    key = (temp_category, condition_type)
+    cities = weather_twins.get(key, [("Earth", "We're all weather buddies! 🌍")])
+
+    # Pick a random city
+    city, fact = random.choice(cities)
+
+    return f"🌍 **Weather Twin Alert!** Right now, **{city}** likely has similar weather! {fact}"
 
 
 def get_location_from_ip():
@@ -105,13 +267,13 @@ def get_location_from_ip():
             display_name = f"{city}, {region}, {country}" if region else f"{city}, {country}"
             return lat, lon, display_name
         else:
-            st.error(f"Location detection failed: {data.get('message', 'Unknown error')}")
+            st.error(f"🌐 Oopsie! Location detection had a hiccup: {data.get('message', 'Unknown error')} 😅")
             return None
     except requests.RequestException as e:
-        st.error(f"Network error detecting location: {e}")
+        st.error(f"🌐 The internet hamster needs a break! Network error: {e} 🐹💤")
         return None
     except Exception as e:
-        st.error(f"Unexpected error detecting location: {e}")
+        st.error(f"✨ Something magical (but unexpected) happened: {e} 🎩✨")
         return None
 
 
@@ -134,10 +296,10 @@ def fetch_weather(latitude, longitude):
         response.raise_for_status()
         return response.json()
     except requests.RequestException as e:
-        st.error(f"Network error fetching weather: {e}")
+        st.error(f"🌈 The weather clouds are being shy! Network error: {e} ☁️")
         return None
     except Exception as e:
-        st.error(f"Unexpected error fetching weather: {e}")
+        st.error(f"🌟 The weather fairies got confused: {e} 🧚‍♀️")
         return None
 
 
@@ -238,38 +400,38 @@ geocode_result = None
 location_source = None
 
 if location_button:
-    with st.spinner("Detecting your location..."):
+    with st.spinner("📍 Playing hide and seek with your location... 🔍✨"):
         geocode_result = get_location_from_ip()
     location_source = "auto"
 
     if geocode_result is None:
-        st.error("❌ Could not detect your location. Please try entering a city manually.")
+        st.error("🗺️ Oops! Your location is playing hide and seek! Try entering a city manually! 😊")
 
 elif search_button:
     if not city_input or city_input.strip() == "":
-        st.warning("⚠️ Please enter a city name")
+        st.warning("🌟 Psst! Don't forget to tell me which city you're curious about! 💭")
     else:
-        with st.spinner("Searching for location..."):
+        with st.spinner("🔍 Finding your happy place... 🗺️✨"):
             geocode_result = geocode_city(city_input.strip())
         location_source = "manual"
 
         if geocode_result is None:
-            st.error("❌ City not found. Try adding country/state for better results.")
+            st.error("🗺️ Hmm, that city is being shy! Try adding a country or state? Like 'Paris, France' or 'Portland, Oregon'! 🌍")
 
 # Display weather if we have valid coordinates
 if geocode_result is not None:
     lat, lon, display_name = geocode_result
 
     if location_source == "auto":
-        st.info(f"📍 **Your Location (approximate): {display_name}**")
+        st.info(f"📍 **Your magical location: {display_name}** ✨")
     else:
-        st.success(f"📍 **{display_name}**")
+        st.success(f"🎉 **Found it! {display_name}** 🌟")
 
-    with st.spinner("Fetching weather data..."):
+    with st.spinner("🌈 Asking the clouds about their mood... ☁️💭"):
         weather_data = fetch_weather(lat, lon)
 
     if weather_data is None:
-        st.error("❌ Failed to fetch weather data. Please try again.")
+        st.error("😅 Oopsie! The weather data got lost in the clouds! Try again? 🌥️")
     else:
         # Extract current weather
         current = weather_data.get("current", {})
@@ -285,11 +447,12 @@ if geocode_result is not None:
         if forecast_24h and len(forecast_24h) > 0:
             current_precip = forecast_24h[0].get("precipitation_probability")
 
-        condition_icon, condition_name = get_weather_condition(current_precip, current_wind)
+        condition_icon, condition_name, condition_desc, condition_tip = get_weather_condition(current_precip, current_wind, current_temp)
 
         # Display current weather
-        st.subheader("🌡️ Current Weather")
+        st.subheader("Current Weather Vibes")
         st.markdown(f"### {condition_icon} {condition_name}")
+        st.info(f"💭 {condition_desc}")
 
         col1, col2, col3 = st.columns(3)
 
@@ -311,67 +474,63 @@ if geocode_result is not None:
             else:
                 st.metric("Wind Speed", "N/A")
 
-        # Display 24-hour forecast chart
-        st.subheader("📊 24-Hour Temperature Forecast")
+        st.write("---")
 
-        if forecast_24h:
-            # Prepare data for chart
-            chart_data = {}
-            labels = []
-            temps = []
+        # Mood of the day
+        mood = get_mood_emoji(condition_name)
+        st.subheader("Today's Mood")
+        st.info(f"**{mood}**")
 
-            for hour in forecast_24h:
-                if hour["temperature"] is not None:
-                    # Format time for display (show hour only)
-                    time_str = hour["time"]
-                    try:
-                        dt = datetime.fromisoformat(time_str)
-                        hour_label = dt.strftime("%H:%M")
-                    except:
-                        hour_label = time_str[-5:]  # Last 5 chars (HH:MM)
+        # Weather tip section
+        st.subheader("Weather Tip")
+        st.success(condition_tip)
 
-                    labels.append(hour_label)
-                    temps.append(hour["temperature"])
+        # Weather twin city fun fact
+        st.subheader("Twin Alert")
+        twin_city_fact = get_weather_twin_city(current_temp, condition_name)
+        st.info(twin_city_fact)
 
-            if temps:
-                # Create a simple dict for st.line_chart
-                import pandas as pd
-                chart_df = pd.DataFrame({
-                    "Temperature (°C)": temps
-                }, index=labels)
-                st.line_chart(chart_df)
-            else:
-                st.info("No temperature data available for chart")
-        else:
-            st.info("No forecast data available")
+        # Weather joke
+        st.subheader("Joke of the Day")
+        joke = get_weather_joke()
+        st.write(f"🎭 {joke}")
+
+        st.write("---")
 
         # Generate and display prediction
-        st.subheader("🔮 Prediction")
+        st.subheader("Crystal Ball")
         if current_temp is not None and forecast_24h:
             prediction = predict_trend(current_temp, forecast_24h)
             st.info(prediction)
         else:
-            st.warning("Insufficient data for prediction")
+            st.warning("🔮 The crystal ball is a bit foggy right now! 🌫️")
 
         # Show detailed hourly data in expandable section
-        with st.expander("📋 Detailed Hourly Forecast"):
+        with st.expander("📋✨ Peek at the Next 12 Hours"):
             for hour in forecast_24h[:12]:  # Show first 12 hours
                 time_str = hour["time"]
                 try:
                     dt = datetime.fromisoformat(time_str)
-                    display_time = dt.strftime("%Y-%m-%d %H:%M")
+                    display_time = dt.strftime("%H:%M")
                 except:
                     display_time = time_str
 
                 # Get condition icon for this hour
-                hour_icon, _ = get_weather_condition(hour['precipitation_probability'], hour['wind_speed'])
+                hour_icon, _, _, _ = get_weather_condition(hour['precipitation_probability'], hour['wind_speed'], hour['temperature'])
 
                 temp = f"{hour['temperature']:.1f}°C" if hour['temperature'] is not None else "N/A"
                 precip = f"{hour['precipitation_probability']}%" if hour['precipitation_probability'] is not None else "N/A"
                 wind = f"{hour['wind_speed']:.1f} km/h" if hour['wind_speed'] is not None else "N/A"
 
-                st.text(f"{hour_icon} {display_time} | Temp: {temp} | Precip: {precip} | Wind: {wind}")
+                st.text(f"{hour_icon} {display_time} | 🌡️ {temp} | 💧 {precip} | 💨 {wind}")
 
-# Footer
+# Playful Footer
 st.divider()
-st.caption("Data provided by Open-Meteo.com • No API key required")
+footer_messages = [
+    "🌈 Made with love and kawaii vibes! Data by Open-Meteo.com ✨",
+    "☀️ Stay sunny, stay awesome! Powered by Open-Meteo.com 💕",
+    "🌸 Weather data brought to you with extra sparkles! ✨",
+    "💫 Spreading weather joy one forecast at a time! 🌤️",
+    "🎨 Making weather cute since today! Data: Open-Meteo.com 💖",
+]
+st.caption(random.choice(footer_messages))
